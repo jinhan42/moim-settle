@@ -1,30 +1,27 @@
 rules_version = '2';
 
-// 모임 경비 정산 — Firestore 보안 규칙
-// 방식: 모임 ID(20자 무작위)를 아는 사람 = 초대 링크를 받은 사람만 읽고 쓸 수 있습니다.
-// - 모임 목록 전체 조회(list)는 막혀 있어서 남의 모임 ID를 알아낼 수 없습니다.
-// - 저장되는 값의 형식과 크기를 검사합니다.
+// 모임 경비 정산 — Firestore 보안 규칙 (총무 1인 사용, 4자리 비밀번호는 화면 잠금 용도)
+// 주의: 비밀번호는 암호화하지 않은 화면 잠금입니다. 사이트 주소를 아는 사람이
+// 개발자 도구로 데이터를 직접 읽을 수 있으니, 민감한 정보는 넣지 마세요.
 service cloud.firestore {
   match /databases/{database}/documents {
-
     match /groups/{gid} {
-      allow get: if gid.size() >= 16;
-      allow list: if false;
+      allow read: if true;
       allow create, update: if gid.size() >= 16
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 40
         && request.resource.data.members is list
-        && request.resource.data.members.size() <= 30;
+        && request.resource.data.members.size() <= 40
+        && request.resource.data.pin is string
+        && request.resource.data.pin.matches('^[0-9]{4}$');
       allow delete: if true;
 
       match /expenses/{eid} {
-        allow read: if gid.size() >= 16;
+        allow read: if true;
         allow create, update: if request.resource.data.amount is number
           && request.resource.data.amount > 0
           && request.resource.data.amount < 1000000000
           && request.resource.data.payer is string
-          && request.resource.data.among is list
-          && request.resource.data.among.size() <= 30
           && request.resource.data.size() <= 12;
         allow delete: if true;
       }
