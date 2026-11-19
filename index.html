@@ -95,6 +95,7 @@ td.c,th.c{text-align:center;width:64px}
 .memo{min-height:84px;padding:10px 14px;resize:vertical;line-height:1.5;font-family:inherit}
 .tm{display:inline-block;font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;background:var(--ink);color:var(--bg);margin-left:4px;vertical-align:1px}
 tr.grp td{border-top:0;padding:12px 0 2px;font-size:12px;color:var(--mute);font-weight:700}
+.incl{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:12px;min-height:40px;cursor:pointer}.incl input{width:20px;height:20px;accent-color:var(--acc)}
 .note{background:light-dark(#fff3ef,#3a2420);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;margin:-2px 0 10px;overflow-wrap:anywhere}
 .acgrid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr) minmax(0,.8fr);gap:8px}@media(max-width:600px){.acgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.acgrid input:nth-child(2){grid-column:1/-1;grid-row:1}}
 .done{text-align:center;color:var(--mute);padding:10px 0}
@@ -396,11 +397,13 @@ function renderReceipt(){
   ${owe.length?`<div class="prog"><i style="width:${oweAmt?(gotAmt/oweAmt*100).toFixed(1):0}%"></i></div><div class="sub" style="text-align:left">받은 돈 ${won(gotAmt)} / ${won(oweAmt)}</div>`:''}
   ${cats.length?`<hr class="dash"><div class="rc-h">분류별</div><div class="bars">${cats.map(([c,v])=>`<div class="b"><span>${esc(c)}</span><span class="t"><i style="width:${(v/mx*100).toFixed(1)}%"></i></span><span>${won(v)}</span></div>`).join('')}</div>`:''}
   <hr class="dash"><label class="rc-h" for="memo" style="display:block">총무 한마디 <span style="font-weight:400;font-size:13px;color:var(--mute)">(정산 문구에 함께 보내져요)</span></label><textarea class="txt memo" id="memo" maxlength="300" rows="3" placeholder="예: 오늘 다들 고생 많았어요! 다음 모임은 12월 20일입니다.">${esc(g.memo||'')}</textarea>
+  ${cats.length?`<label class="incl"><input type="checkbox" id="inclCat" ${g.catOff?'':'checked'}> 분류별 합계(식비·교통 등)도 함께 보내기</label>`:''}
   <button class="copy" id="cp">정산 문구 보내기 (카톡 등)</button>
   <button class="fin" id="fin">${isDone()?'다시 열기 (수정 가능하게)':'정산 완료 처리'}</button>`;
   $('#unit').value=String(s.u);$('#unit').onchange=e=>run(S.patchGroup(cur,{unit:+e.target.value}));
   $('#tRc').querySelectorAll('.ck').forEach(b=>b.onclick=()=>{const c={...(group.checks||{})};c[b.dataset.p]=!c[b.dataset.p];run(S.patchGroup(cur,{checks:c}))});
   const saveMemo=()=>{const v=$('#memo').value.trim().slice(0,300);if(v!==(group.memo||''))run(S.patchGroup(cur,{memo:v}))};
+  if($('#inclCat'))$('#inclCat').onchange=e=>run(S.patchGroup(cur,{catOff:!e.target.checked}));
   $('#memo').addEventListener('blur',()=>setTimeout(saveMemo,400));
   $('#cp').onclick=()=>{const v=$('#memo').value.trim().slice(0,300);if(v!==(group.memo||'')){group={...group,memo:v};run(S.patchGroup(cur,{memo:v}))}shareText(settleText(settle(group,gExps())),$('#cp'))};
   if($('#cpAcct'))$('#cpAcct').onclick=async e=>{const b=e.currentTarget,a=acctOf(group);try{await navigator.clipboard.writeText(`${a.bank} ${a.no}`.trim());b.textContent='복사됨'}catch(_){b.textContent='길게 눌러 복사'}setTimeout(()=>b.textContent='계좌 복사',2000)};
@@ -412,7 +415,7 @@ function settleText(s){const g=group,chk=g.checks||{};
   (()=>{const line=r=>{const nm=r.team?`${r.p}(${r.size}명)`:r.p;return r.send>0?`${nm} ${won(r.send)}${r.paid?` (결제 ${won(r.paid)} 제외)`:''}${chk[r.p]?' ✔':''}`:r.send<0?`${nm} ${won(-r.send)} 돌려받음`:`${nm} 정산 끝`};
     const P=s.rows.filter(r=>!r.tre&&!r.team),T=s.rows.filter(r=>!r.tre&&r.team);
     return T.length?`[개인]\n`+P.map(line).join('\n')+`\n\n[단체]\n`+T.map(line).join('\n'):P.map(line).join('\n')})()+
-  (g.memo?`\n\n[총무 한마디]\n${g.memo}`:'')+`\n\n[내역]\n`+gExps().slice().reverse().map(x=>`${x.date?x.date.slice(5).replace('-','/'):''} ${x.title||x.cat} ${won(x.amount)}`).join('\n')+(s.surplus>0?`\n\n남는 돈 ${won(s.surplus)}`:'')}
+  (()=>{if(g.catOff)return'';const c=Object.entries(s.cat).sort((a,b)=>b[1]-a[1]);if(!c.length)return'';return`\n\n[분류별]\n`+c.map(([k,v])=>`${k} ${won(v)} (${Math.round(v/s.total*100)}%)`).join('\n')})()+(g.memo?`\n\n[총무 한마디]\n${g.memo}`:'')+`\n\n[내역]\n`+gExps().slice().reverse().map(x=>`${x.date?x.date.slice(5).replace('-','/'):''} ${x.title||x.cat} ${won(x.amount)}`).join('\n')+(s.surplus>0?`\n\n남는 돈 ${won(s.surplus)}`:'')}
 function reopen(){askPin(group,()=>run(S.patchGroup(cur,{status:'open'})).then(()=>{tab('in');toast('다시 수정할 수 있어요.')}))}
 
 function render(){
