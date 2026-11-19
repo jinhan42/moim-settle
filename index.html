@@ -171,8 +171,9 @@ tr.grp td{border-top:0;padding:12px 0 2px;font-size:12px;color:var(--mute);font-
   <div class="chips" id="nTeams" style="margin-top:8px"></div>
   <div class="row2">
     <div><label class="f" for="nTre">총무</label><select class="txt" id="nTre"><option value="">참여자를 먼저 입력</option></select></div>
-    <div><label class="f" for="nPin">비밀번호 (숫자 4자리)</label><input class="txt" id="nPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></div>
+    <div><label class="f" for="nPin">총무 비밀번호 (숫자 4자리)</label><input class="txt" id="nPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="모든 기능"></div>
   </div>
+  <label class="f" for="nInPin">입력용 비밀번호 <span style="font-weight:400">(선택 · 일행에게 알려줄 번호, 지출 추가만 가능)</span></label><input class="txt" id="nInPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="예: 1111" style="max-width:240px">
   <label class="f">입금받을 계좌 <span style="font-weight:400">(선택 · 정산 문구에 표시)</span></label>
   <div class="acgrid"><input class="txt" id="nBank" list="bankList" placeholder="은행"><input class="txt" id="nNo" inputmode="numeric" placeholder="계좌번호 (예: 3333-01-2345678)"><input class="txt" id="nHolder" placeholder="예금주"></div>
   <label class="f" for="nNote">입금 안내 문구 <span style="font-weight:400">(선택 · 정산 문구에 표시)</span></label><input class="txt" id="nNote" maxlength="80" placeholder="예: 카톡으로 송금해 주세요 / 토스 송금 OK / 27일까지">
@@ -197,15 +198,16 @@ tr.grp td{border-top:0;padding:12px 0 2px;font-size:12px;color:var(--mute);font-
   <label class="f">단체 <span style="font-weight:400">(선택 · 단체명과 인원수 — 인원수만큼 1/n 부담)</span></label>
   <div class="inl" style="margin-top:0"><input class="txt" id="sTeam" placeholder="단체명 (예: 산악회, 3팀)"><input class="txt" id="sTeamN" type="number" inputmode="numeric" min="1" max="999" placeholder="인원" style="flex:0 0 84px"><button type="button" class="btn" id="sTeamB">추가</button></div>
   <p class="hint" style="margin-top:4px">같은 단체명을 다시 추가하면 인원수가 바뀌어요.</p>
-  <label class="f" for="sPin">비밀번호 변경 (숫자 4자리)</label>
-  <div class="inl" style="margin-top:0"><input class="txt" id="sPin" type="password" inputmode="numeric" maxlength="4" placeholder="새 비밀번호" autocomplete="off"><button class="btn light" id="sPinB">변경</button></div>
+  <label class="f" for="sPin">총무 비밀번호 변경 <span style="font-weight:400">(모든 기능)</span></label>
+  <div class="inl" style="margin-top:0"><input class="txt" id="sPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="새 총무 비밀번호"><button class="btn light" id="sPinB">변경</button></div>
+  <label class="f" for="sInPin">입력용 비밀번호 <span style="font-weight:400" id="sInState"></span></label>
+  <div class="inl" style="margin-top:0"><input class="txt" id="sInPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="새 입력용 비밀번호"><button class="btn light" id="sInPinB">변경</button><button class="btn light" id="sInPinX">없애기</button></div>
   <p class="hint" id="sHint"></p>
   <div class="inl"><button class="btn danger" id="sDel">모임 삭제</button><button class="btn light" id="sClose">닫기</button></div>
 </div></div>
 
 <!-- 홈: 모임 목록 -->
 <section class="home" id="homeV" hidden>
-  <div class="donebar" id="migBar" hidden style="padding:0;margin:0 0 14px"><div><span id="migTxt"></span><button class="btn acc" id="bMig">클라우드로 옮기기</button></div></div>
   <div id="hList"></div>
   <div class="foot" id="hFoot">
     <button class="btn light" id="bBak">백업 파일 저장</button>
@@ -309,6 +311,7 @@ async function cloudStore(cfg){const V='10.12.2';
     async delGroup(gid,ids){for(const i of ids)await fs.deleteDoc(fs.doc(d,'groups',gid,'expenses',i));await fs.deleteDoc(fs.doc(d,'groups',gid))}};
 }
 
+let role=null;const mine=new Set(lsGet('ms-mine',[]));const isAdmin=()=>role==='admin';const canEdit=x=>isAdmin()||mine.has(x.id);
 let S=null,glist=[],cur=null,group=null,exps={},unsub=null,undo=null,tTimer=null;
 const F={payer:null,cat:'식비',edit:null,place:null,view:null,autoTitle:''};
 const fail=e=>{console.error(e);toast('저장하지 못했어요. 인터넷 연결이나 설정을 확인해 주세요.')};
@@ -328,9 +331,9 @@ async function putExp(x){const next={...exps,[x.id]:x};await run(S.putExp(cur,x)
 async function delExp(id){const next={...exps};delete next[id];await run(S.delExp(cur,id));syncTotal(next)}
 
 /* ---------- 화면 전환 ---------- */
-function goHome(){if(unsub)unsub();unsub=null;cur=null;group=null;exps={};ss.set('ms-open',null);$('#pSet').hidden=true;render()}
-function openGroup(gid){
-  if(unsub)unsub();cur=gid;group=null;exps={};ss.set('ms-open',gid);$('#pNew').hidden=true;let first=true;
+function goHome(){if(unsub)unsub();unsub=null;cur=null;group=null;exps={};role=null;ss.set('ms-open',null);ss.set('ms-role',null);$('#pSet').hidden=true;render()}
+function openGroup(gid,rl){
+  if(unsub)unsub();cur=gid;group=null;exps={};role=rl||'admin';ss.set('ms-open',gid);ss.set('ms-role',role);$('#pSet').hidden=true;$('#pNew').hidden=true;let first=true;
   unsub=S.sub(gid,g=>{group=g;if(!g){goHome();toast('모임을 찾을 수 없어요.');return}if(first){first=false;F.payer=treOf(g);resetForm();tab(g.status==='done'?'rc':'in')}render()},
     e=>{exps=e;render()},err=>{console.error(err);toast('연결이 끊겼어요. 새로고침해 주세요.')});
   render();
@@ -352,8 +355,8 @@ function renderHome(){
   const card=g=>`<button class="gcard" data-id="${esc(g.id)}"><span><b>${esc(g.name)}</b><small>${dt(g.date)} · ${heads(g)}명 · 총무 ${esc(treOf(g)||'')}</small></span><span class="gr"><span class="badge ${g.status==='done'?'dn':''}">${g.pin?LOCK:''}${g.status==='done'?'정산 완료':'진행 중'}</span><b>${won(g.total||0)}</b></span></button>`;
   const open=L.filter(g=>g.status!=='done'),done=L.filter(g=>g.status==='done');
   $('#hList').innerHTML=L.length?(open.length?`<div class="sec">진행 중 ${open.length}</div>`+open.map(card).join(''):'')+(done.length?`<div class="sec">정산 완료 ${done.length}</div>`+done.map(card).join(''):'')
-    :`<div class="empty"><h2 style="font-size:26px">아직 모임이 없어요</h2><p>총무가 모임을 만들고 결제할 때마다 금액을 넣으면, 끝나고 1/n 금액과 입금 현황을 한 번에 정리해 줍니다.</p><div class="inl" style="justify-content:center;flex-wrap:wrap"><button class="btn acc" id="eNew">+ 새 모임 만들기</button><button class="btn light" id="eDemo">예시 모임 보기 (비번 0000)</button></div></div>`;
-  $('#hList').querySelectorAll('.gcard').forEach(b=>b.onclick=()=>{const g=glist.find(x=>x.id===b.dataset.id);if(g)askPin(g,()=>openGroup(g.id))});
+    :`<div class="empty"><h2 style="font-size:26px">아직 모임이 없어요</h2><p>총무가 모임을 만들고 결제할 때마다 금액을 넣으면, 끝나고 1/n 금액과 입금 현황을 한 번에 정리해 줍니다.</p><div class="inl" style="justify-content:center;flex-wrap:wrap"><button class="btn acc" id="eNew">+ 새 모임 만들기</button><button class="btn light" id="eDemo">예시 모임 보기 (총무 0000 · 입력 1111)</button></div></div>`;
+  $('#hList').querySelectorAll('.gcard').forEach(b=>b.onclick=()=>{const g=glist.find(x=>x.id===b.dataset.id);if(g)askPin(g,rl=>openGroup(g.id,rl))});
   if($('#eNew'))$('#eNew').onclick=openNew;if($('#eDemo'))$('#eDemo').onclick=demo;
 }
 
@@ -378,7 +381,7 @@ function renderList(){
   let day='',h='';
   L.forEach(x=>{if(x.date!==day){day=x.date;const d=new Date(day+'T00:00');h+=`<div class="day">${isNaN(d)?'날짜 없음':`${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})`}</div>`}
     const pl=x.place,link=pl&&/^https?:\/\/place\.map\.kakao\.com\/\d+$/.test(pl.url||'')?` · <a href="${esc(pl.url.replace(/^http:/,'https:'))}" target="_blank" rel="noopener">카카오맵</a>`:'';
-    h+=`<div class="ex${x.id===window._fl?' flash':''}"><span class="tag">${esc(x.cat||'기타')}</span><div><b>${esc(x.title||(pl&&pl.name)||x.cat||'지출')}</b><small>${x.payer===tre?'총무':esc(x.payer)} 결제${pl&&pl.name&&pl.name!==x.title?' · '+esc(pl.name):''}${link}</small></div><span class="m">${won(x.amount)}</span><span class="act">${ro?'':`<button data-e="${esc(x.id)}" aria-label="수정">✎</button><button data-d="${esc(x.id)}" aria-label="삭제">✕</button>`}</span></div>`});
+    h+=`<div class="ex${x.id===window._fl?' flash':''}"><span class="tag">${esc(x.cat||'기타')}</span><div><b>${esc(x.title||(pl&&pl.name)||x.cat||'지출')}</b><small>${x.payer===tre?'총무':esc(x.payer)} 결제${pl&&pl.name&&pl.name!==x.title?' · '+esc(pl.name):''}${link}</small></div><span class="m">${won(x.amount)}</span><span class="act">${ro||!canEdit(x)?'':`<button data-e="${esc(x.id)}" aria-label="수정">✎</button><button data-d="${esc(x.id)}" aria-label="삭제">✕</button>`}</span></div>`});
   $('#lBody').innerHTML=h||'<p class="done">검색 결과가 없어요.</p>';window._fl=null;
   $('#lBody').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>edit(b.dataset.e));
   $('#lBody').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const x=exps[b.dataset.d];if(!x)return;delExp(x.id);toast(`'${x.title||x.cat}' 삭제됨`,()=>putExp(x))});
@@ -391,24 +394,24 @@ function renderReceipt(){
   <div class="total">${won(s.total)}</div>
   <div class="per">${s.n}명 · 1인 <b>${won(s.share)}</b></div>${s.rows.some(r=>r.team)?`<div class="sub">${esc(headStr(g).replace(/^\d+명 \((.*)\)$/,'$1'))}</div>`:''}
   <div class="sub">${s.total?`${fmt(s.total)} ÷ ${s.n} = ${s.raw.toLocaleString('ko-KR',{maximumFractionDigits:1})}원 → ${uLab}`:'지출을 입력하면 1/n 금액이 나와요'}${s.surplus>0?` · 남는 돈 ${won(s.surplus)}`:''}</div>
-  <div class="rc-h" style="margin-top:12px;justify-content:center"><select id="unit" aria-label="끝전 처리"><option value="1">끝전 그대로 (1원 단위)</option><option value="10">10원 단위 올림</option><option value="100">100원 단위 올림</option><option value="1000">1,000원 단위 올림</option></select></div>
+  <div class="rc-h" style="margin-top:12px;justify-content:center"><select id="unit" aria-label="끝전 처리" ${isAdmin()?'':'disabled'}><option value="1">끝전 그대로 (1원 단위)</option><option value="10">10원 단위 올림</option><option value="100">100원 단위 올림</option><option value="1000">1,000원 단위 올림</option></select></div>
   <hr class="dash"><div class="rc-h"><span>총무 ${esc(s.tre)}에게 입금</span><span style="font-weight:500;font-size:13px;color:var(--mute)">${got.length}/${owe.length}명 완료</span></div>
   ${acctOf(g)?`<div class="acct"><div><small>입금 계좌</small>${esc(acctOf(g).bank)} <b>${esc(acctOf(g).no)}</b>${acctOf(g).holder?` <span>${esc(acctOf(g).holder)}</span>`:''}</div><button id="cpAcct" type="button">계좌 복사</button></div>`:`<div class="acct"><div><small>입금 계좌</small>아직 없어요</div><button id="addAcct" type="button">계좌 입력</button></div>`}${g.note?`<div class="note">${esc(g.note)}</div>`:''}
-  <table><thead><tr><th>이름</th><th>결제한 돈</th><th>보낼 돈</th><th class="c">입금</th></tr></thead><tbody>${s.rows.map((r,i,a)=>`${a.some(x=>x.team)&&(i===0||a[i-1].team!==r.team)?`<tr class="grp"><td colspan="4">${r.team?`단체 ${a.filter(x=>x.team).length}곳`:`개인 ${a.filter(x=>!x.team).length}명`}</td></tr>`:''}<tr><td>${esc(r.p)}${r.team?`<span class="tm">${r.size}명</span>`:''}${r.tre?' <span style="color:var(--mute);font-size:12px">총무</span>':''}</td><td>${r.paid?fmt(r.paid):'-'}</td><td class="${r.send>0?'neg':r.send<0?'pos':''}">${r.tre?'-':r.send>0?fmt(r.send):r.send<0?`받을 돈 ${fmt(-r.send)}`:'0'}</td><td class="c">${r.send>0?`<button class="ck" data-p="${esc(r.p)}" aria-pressed="${!!chk[r.p]}">${chk[r.p]?'완료':'미입금'}</button>`:''}</td></tr>`).join('')}</tbody></table>
+  <table><thead><tr><th>이름</th><th>결제한 돈</th><th>보낼 돈</th><th class="c">입금</th></tr></thead><tbody>${s.rows.map((r,i,a)=>`${a.some(x=>x.team)&&(i===0||a[i-1].team!==r.team)?`<tr class="grp"><td colspan="4">${r.team?`단체 ${a.filter(x=>x.team).length}곳`:`개인 ${a.filter(x=>!x.team).length}명`}</td></tr>`:''}<tr><td>${esc(r.p)}${r.team?`<span class="tm">${r.size}명</span>`:''}${r.tre?' <span style="color:var(--mute);font-size:12px">총무</span>':''}</td><td>${r.paid?fmt(r.paid):'-'}</td><td class="${r.send>0?'neg':r.send<0?'pos':''}">${r.tre?'-':r.send>0?fmt(r.send):r.send<0?`받을 돈 ${fmt(-r.send)}`:'0'}</td><td class="c">${r.send>0?`<button class="ck" data-p="${esc(r.p)}" aria-pressed="${!!chk[r.p]}" ${isAdmin()?'':'disabled'}>${chk[r.p]?'완료':'미입금'}</button>`:''}</td></tr>`).join('')}</tbody></table>
   ${owe.length?`<div class="prog"><i style="width:${oweAmt?(gotAmt/oweAmt*100).toFixed(1):0}%"></i></div><div class="sub" style="text-align:left">받은 돈 ${won(gotAmt)} / ${won(oweAmt)}</div>`:''}
   ${cats.length?`<hr class="dash"><div class="rc-h">분류별</div><div class="bars">${cats.map(([c,v])=>`<div class="b"><span>${esc(c)}</span><span class="t"><i style="width:${(v/mx*100).toFixed(1)}%"></i></span><span>${won(v)}</span></div>`).join('')}</div>`:''}
-  <hr class="dash"><label class="rc-h" for="memo" style="display:block">총무 한마디 <span style="font-weight:400;font-size:13px;color:var(--mute)">(정산 문구에 함께 보내져요)</span></label><textarea class="txt memo" id="memo" maxlength="300" rows="3" placeholder="예: 오늘 다들 고생 많았어요! 다음 모임은 12월 20일입니다.">${esc(g.memo||'')}</textarea>
-  ${cats.length?`<label class="incl"><input type="checkbox" id="inclCat" ${g.catOff?'':'checked'}> 분류별 합계(식비·교통 등)도 함께 보내기</label>`:''}
+  <hr class="dash"><label class="rc-h" for="memo" style="display:block">총무 한마디 <span style="font-weight:400;font-size:13px;color:var(--mute)">(정산 문구에 함께 보내져요)</span></label><textarea class="txt memo" id="memo" ${isAdmin()?'':'readonly'} maxlength="300" rows="3" placeholder="예: 오늘 다들 고생 많았어요! 다음 모임은 12월 20일입니다.">${esc(g.memo||'')}</textarea>
+  ${cats.length?`<label class="incl"><input type="checkbox" id="inclCat" ${g.catOff?'':'checked'} ${isAdmin()?'':'disabled'}> 분류별 합계(식비·교통 등)도 함께 보내기</label>`:''}
   <button class="copy" id="cp">정산 문구 보내기 (카톡 등)</button>
-  <button class="fin" id="fin">${isDone()?'다시 열기 (수정 가능하게)':'정산 완료 처리'}</button>`;
+  <button class="fin" id="fin" ${isAdmin()?'':'hidden'}>${isDone()?'다시 열기 (수정 가능하게)':'정산 완료 처리'}</button>`;
   $('#unit').value=String(s.u);$('#unit').onchange=e=>run(S.patchGroup(cur,{unit:+e.target.value}));
-  $('#tRc').querySelectorAll('.ck').forEach(b=>b.onclick=()=>{const c={...(group.checks||{})};c[b.dataset.p]=!c[b.dataset.p];run(S.patchGroup(cur,{checks:c}))});
-  const saveMemo=()=>{const v=$('#memo').value.trim().slice(0,300);if(v!==(group.memo||''))run(S.patchGroup(cur,{memo:v}))};
+  $('#tRc').querySelectorAll('.ck').forEach(b=>b.onclick=()=>{if(!isAdmin())return;const c={...(group.checks||{})};c[b.dataset.p]=!c[b.dataset.p];run(S.patchGroup(cur,{checks:c}))});
+  const saveMemo=()=>{if(!isAdmin())return;const v=$('#memo').value.trim().slice(0,300);if(v!==(group.memo||''))run(S.patchGroup(cur,{memo:v}))};
   if($('#inclCat'))$('#inclCat').onchange=e=>run(S.patchGroup(cur,{catOff:!e.target.checked}));
   $('#memo').addEventListener('blur',()=>setTimeout(saveMemo,400));
-  $('#cp').onclick=()=>{const v=$('#memo').value.trim().slice(0,300);if(v!==(group.memo||'')){group={...group,memo:v};run(S.patchGroup(cur,{memo:v}))}shareText(settleText(settle(group,gExps())),$('#cp'))};
+  $('#cp').onclick=()=>{const v=$('#memo').value.trim().slice(0,300);if(isAdmin()&&v!==(group.memo||'')){group={...group,memo:v};run(S.patchGroup(cur,{memo:v}))}shareText(settleText(settle(group,gExps())),$('#cp'))};
   if($('#cpAcct'))$('#cpAcct').onclick=async e=>{const b=e.currentTarget,a=acctOf(group);try{await navigator.clipboard.writeText(`${a.bank} ${a.no}`.trim());b.textContent='복사됨'}catch(_){b.textContent='길게 눌러 복사'}setTimeout(()=>b.textContent='계좌 복사',2000)};
-  if($('#addAcct'))$('#addAcct').onclick=()=>{$('#pSet').hidden=false;fillSet();$('#sNo').focus();window.scrollTo({top:0,behavior:'smooth'})};
+  if($('#addAcct'))$('#addAcct').onclick=()=>{if(!isAdmin()){toast('계좌는 총무만 입력할 수 있어요.');return}$('#pSet').hidden=false;fillSet();$('#sNo').focus();window.scrollTo({top:0,behavior:'smooth'})};
   $('#fin').onclick=()=>isDone()?reopen():run(S.patchGroup(cur,{status:'done',doneAt:Date.now()})).then(()=>toast('정산 완료로 표시했어요.'));
 }
 function settleText(s){const g=group,chk=g.checks||{};
@@ -417,16 +420,16 @@ function settleText(s){const g=group,chk=g.checks||{};
     const P=s.rows.filter(r=>!r.tre&&!r.team),T=s.rows.filter(r=>!r.tre&&r.team);
     return T.length?`[개인]\n`+P.map(line).join('\n')+`\n\n[단체]\n`+T.map(line).join('\n'):P.map(line).join('\n')})()+
   (()=>{if(g.catOff)return'';const c=Object.entries(s.cat).sort((a,b)=>b[1]-a[1]);if(!c.length)return'';return`\n\n[분류별]\n`+c.map(([k,v])=>`${k} ${won(v)} (${Math.round(v/s.total*100)}%)`).join('\n')})()+(g.memo?`\n\n[총무 한마디]\n${g.memo}`:'')+`\n\n[내역]\n`+gExps().slice().reverse().map(x=>`${x.date?x.date.slice(5).replace('-','/'):''} ${x.title||x.cat} ${won(x.amount)}`).join('\n')+(s.surplus>0?`\n\n남는 돈 ${won(s.surplus)}`:'')}
-function reopen(){askPin(group,()=>run(S.patchGroup(cur,{status:'open'})).then(()=>{tab('in');toast('다시 수정할 수 있어요.')}))}
+function reopen(){if(!isAdmin())return;askPin(group,()=>run(S.patchGroup(cur,{status:'open'})).then(()=>{tab('in');toast('다시 수정할 수 있어요.')}))}
 
 function render(){
   const inG=!!(cur&&group);
-  $('#homeV').hidden=!!cur;$('#bBack').hidden=!cur;$('#bSet').hidden=!inG;$('#bNew').hidden=!!cur;
-  $('#mainV').hidden=!inG;$('#tabs').hidden=!inG;$('#doneBar').hidden=!(inG&&isDone());
+  $('#homeV').hidden=!!cur;$('#bBack').hidden=!cur;$('#bSet').hidden=!inG||!isAdmin();$('#bNew').hidden=!!cur;
+  $('#mainV').hidden=!inG;$('#tabs').hidden=!inG;$('#doneBar').hidden=!(inG&&isDone());$('#bReopen').hidden=!isAdmin();
   if(!cur){$('#hTitle').textContent='모임 경비 정산';$('#sync').textContent=S.mode==='cloud'?'Firebase에 저장 중 · 여러 기기에서 같은 목록이 보여요':'이 기기에 저장 중';$('#hFoot').hidden=S.mode!=='local';renderHome();return}
   if(!group)return;
   $('#hTitle').textContent=group.name;
-  $('#sync').textContent=`${dt(group.date)} · ${headStr(group)} · 총무 ${treOf(group)} · ${isDone()?'정산 완료':'진행 중'}${group.pin?'':' · 비밀번호 없음 (설정에서 지정)'}`;
+  $('#sync').textContent=`${dt(group.date)} · ${headStr(group)} · 총무 ${treOf(group)} · ${isDone()?'정산 완료':'진행 중'}${isAdmin()?(group.pin?'':' · 비밀번호 없음 (설정에서 지정)'):' · 입력 전용으로 접속'}`;
   if(isDone()){$('#doneTxt').textContent=`정산 완료된 모임이에요${group.doneAt?` (${dt(new Date(group.doneAt).toISOString().slice(0,10))})`:''} · 보기 전용`}
   $('#tIn').hidden=isDone();
   renderForm();renderList();renderReceipt();if(!$('#pSet').hidden)renderSet();
@@ -447,13 +450,15 @@ $('#bBack').onclick=goHome;$('#bReopen').onclick=reopen;
 /* ---------- 비밀번호 ---------- */
 let pinBuf='',pinG=null,pinCb=null;
 const dots=()=>$('#pinD').innerHTML=[0,1,2,3].map(i=>`<i class="${i<pinBuf.length?'on':''}"></i>`).join('');
-function askPin(g,cb){if(!g.pin||!/^\d{4}$/.test(String(g.pin))){cb();return}pinBuf='';pinG=g;pinCb=cb;$('#pinT').textContent=g.name;$('#pinH').textContent='';dots();$('#pinM').hidden=false}
+let pinAdminOnly=false;
+function askPin(g,cb,adminOnly){if(!g.pin||!/^\d{4}$/.test(String(g.pin))){cb('admin');return}pinBuf='';pinG=g;pinCb=cb;pinAdminOnly=!!adminOnly;$('#pinT').textContent=g.name+(adminOnly?' · 총무 비밀번호':'');$('#pinH').textContent='';dots();$('#pinM').hidden=false}
 function pinKey(k){if(!pinG)return;if(k==='del')pinBuf=pinBuf.slice(0,-1);else if(pinBuf.length<4)pinBuf+=k;dots();
-  if(pinBuf.length===4){if(pinBuf===String(pinG.pin)){$('#pinM').hidden=true;const cb=pinCb;pinG=pinCb=null;cb()}
+  if(pinBuf.length===4){const rl=pinBuf===String(pinG.pin)?'admin':(!pinAdminOnly&&pinG.inPin&&pinBuf===String(pinG.inPin))?'input':null;if(rl){$('#pinM').hidden=true;const cb=pinCb;pinG=pinCb=null;cb(rl)}
     else{$('#pinH').textContent='비밀번호가 맞지 않아요.';const d=$('#pinD');d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake');pinBuf='';setTimeout(dots,300)}}}
 $('#pinPad').innerHTML=['1','2','3','4','5','6','7','8','9','','0','del'].map(k=>`<button type="button" data-k="${k}" ${k==='del'?'aria-label="지우기"':''}>${k==='del'?'⌫':k}</button>`).join('');
 $('#pinPad').querySelectorAll('button').forEach(b=>b.onclick=()=>b.dataset.k&&pinKey(b.dataset.k));
 $('#pinX').onclick=()=>{$('#pinM').hidden=true;pinG=pinCb=null};
+$('#pinH').textContent='';
 document.addEventListener('keydown',e=>{if($('#pinM').hidden)return;if(/^\d$/.test(e.key))pinKey(e.key);else if(e.key==='Backspace')pinKey('del');else if(e.key==='Escape')$('#pinX').click()});
 
 /* ---------- 입력 폼 ---------- */
@@ -465,7 +470,7 @@ $('#tIn').addEventListener('submit',e=>{e.preventDefault();const h=$('#fHint');h
   if(a>=1e9){h.className='hint err';h.textContent='금액이 너무 커요.';return}
   const old=F.edit&&exps[F.edit];
   const x={id:F.edit||rid(16),amount:a,title:$('#fTit').value.trim().slice(0,60),payer:F.payer||treOf(group),cat:F.cat,date:$('#fDate').value||today(),place:F.place||null,ts:old?old.ts:Date.now()};
-  window._fl=x.id;putExp(x);h.textContent=`${old?'수정':'저장'}했어요 · ${x.title||x.cat} ${won(a)}`;
+  window._fl=x.id;if(!old&&!isAdmin()){mine.add(x.id);lsSet('ms-mine',[...mine].slice(-500))}putExp(x);h.textContent=`${old?'수정':'저장'}했어요 · ${x.title||x.cat} ${won(a)}`;
   F.payer=treOf(group);resetForm();$('#plPanel').hidden=true;renderForm()});
 $('#q').addEventListener('input',renderList);
 
@@ -531,15 +536,15 @@ $('#nTeamB').onclick=()=>{const t=readTeam('n');if(!t){$('#nHint').className='hi
 ['#nTeam','#nTeamN'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#nTeamB').click()}}));
 $('#nMem').addEventListener('input',()=>{const m=parseMem($('#nMem').value),v=$('#nTre').value;$('#nTre').innerHTML=m.length?m.map(p=>`<option>${esc(p)}</option>`).join(''):'<option value="">참여자를 먼저 입력</option>';if(m.includes(v))$('#nTre').value=v});
 $('#nOk').onclick=()=>{const name=$('#nName').value.trim(),solo=parseMem($('#nMem').value).filter(x=>!(x in nTeams)),m=[...solo,...Object.keys(nTeams)],sizes={...nTeams},hc=solo.length+Object.values(nTeams).reduce((a,b)=>a+b,0),pin=$('#nPin').value.trim(),h=$('#nHint');h.className='hint err';
-  if(!name){h.textContent='모임 이름을 넣어 주세요.';return}if(!solo.length){h.textContent='총무를 포함해 개인 참여자를 1명 이상 넣어 주세요.';return}if(hc<2){h.textContent='참여 인원이 2명 이상이어야 해요.';return}if(m.length>60){h.textContent='참여자(개인+단체)는 60개까지 넣을 수 있어요.';return}if(!pinOk(pin)){h.textContent='비밀번호는 숫자 4자리로 넣어 주세요.';return}
-  const g={id:rid(20),name:name.slice(0,40),date:$('#nDate').value||today(),members:m,sizes,treasurer:solo.includes($('#nTre').value)?$('#nTre').value:solo[0],pin,unit:100,status:'open',checks:{},...readAcct('n'),total:0,count:0,created:Date.now()};
-  ['#nName','#nMem','#nPin','#nBank','#nNo','#nHolder','#nNote'].forEach(s=>$(s).value='');nTeams={};teamChips();$('#nDate').value='';$('#nTre').innerHTML='<option value="">참여자를 먼저 입력</option>';$('#pNew').hidden=true;
-  run(S.putGroup(g)).then(()=>openGroup(g.id))};
-function demo(){const d=today(),g={id:rid(20),name:'11월 정기모임 (예시)',date:d,members:['찐이','민수','지영','현우','수진','등산동호회'],sizes:{'등산동호회':4},treasurer:'찐이',pin:'0000',unit:100,status:'open',checks:{'민수':true},bank:'카카오뱅크',acctNo:'3333-00-0000000',holder:'찐이',note:'카톡으로 송금해 주세요',created:Date.now()};
+  if(!name){h.textContent='모임 이름을 넣어 주세요.';return}if(!solo.length){h.textContent='총무를 포함해 개인 참여자를 1명 이상 넣어 주세요.';return}if(hc<2){h.textContent='참여 인원이 2명 이상이어야 해요.';return}if(m.length>60){h.textContent='참여자(개인+단체)는 60개까지 넣을 수 있어요.';return}if(!pinOk(pin)){h.textContent='총무 비밀번호는 숫자 4자리로 넣어 주세요.';return}const inPin=$('#nInPin').value.trim();if(inPin&&!pinOk(inPin)){h.textContent='입력용 비밀번호는 숫자 4자리로 넣어 주세요.';return}if(inPin&&inPin===pin){h.textContent='입력용 비밀번호는 총무 비밀번호와 달라야 해요.';return}
+  const g={id:rid(20),name:name.slice(0,40),date:$('#nDate').value||today(),members:m,sizes,treasurer:solo.includes($('#nTre').value)?$('#nTre').value:solo[0],pin,inPin,unit:100,status:'open',checks:{},...readAcct('n'),total:0,count:0,created:Date.now()};
+  ['#nName','#nMem','#nPin','#nInPin','#nBank','#nNo','#nHolder','#nNote'].forEach(s=>$(s).value='');nTeams={};teamChips();$('#nDate').value='';$('#nTre').innerHTML='<option value="">참여자를 먼저 입력</option>';$('#pNew').hidden=true;
+  run(S.putGroup(g)).then(()=>openGroup(g.id,'admin'))};
+function demo(){const d=today(),g={id:rid(20),name:'11월 정기모임 (예시)',date:d,members:['찐이','민수','지영','현우','수진','등산동호회'],sizes:{'등산동호회':4},treasurer:'찐이',pin:'0000',inPin:'1111',unit:100,status:'open',checks:{'민수':true},bank:'카카오뱅크',acctNo:'3333-00-0000000',holder:'찐이',note:'카톡으로 송금해 주세요',created:Date.now()};
   const X=[['1차 삼겹살',312000,'찐이','식비'],['2차 호프',142500,'찐이','술·카페'],['노래방',44000,'민수','입장·체험'],['대리운전',25000,'찐이','교통']];
   const e={};X.forEach((s,k)=>{const id=rid(16);e[id]={id,title:s[0],amount:s[1],payer:s[2],cat:s[3],date:d,place:null,ts:Date.now()+k}});
   g.total=X.reduce((s,x)=>s+x[1],0);g.count=X.length;
-  run((async()=>{await S.putGroup(g);for(const x of Object.values(e))await S.putExp(g.id,x)})()).then(()=>toast('예시 모임을 만들었어요. 비밀번호는 0000이에요.'))}
+  run((async()=>{await S.putGroup(g);for(const x of Object.values(e))await S.putExp(g.id,x)})()).then(()=>toast('예시 모임: 총무 비밀번호 0000, 입력용 1111'))}
 function renderSet(){const g=group;if(!g)return;const used=new Set(gExps().map(x=>x.payer));
   $('#sCnt').textContent=`· ${headStr(g)}`;
   $('#sMem').innerHTML=(g.members||[]).map((p,k)=>`<span class="mchip">${esc(p)}${isTeam(g,p)?`<span class="tm">${sizeOf(g,p)}명</span>`:''}<button data-k="${k}" aria-label="${esc(p)} 빼기">✕</button></span>`).join('');
@@ -548,7 +553,7 @@ function renderSet(){const g=group;if(!g)return;const used=new Set(gExps().map(x
     if(used.has(p)){h.textContent=`${p} 님이 결제한 지출이 있어 뺄 수 없어요. 해당 지출의 결제자를 먼저 바꾸세요.`;return}
     if(p===treOf(g)){h.textContent='총무는 뺄 수 없어요. 총무를 먼저 바꾸세요.';return}
     const c={...(g.checks||{})},z={...(g.sizes||{})};delete c[p];delete z[p];run(S.patchGroup(cur,{members:g.members.filter(x=>x!==p),checks:c,sizes:z}))})}
-function fillSet(){const g=group;$('#sName').value=g.name;$('#sDate').value=g.date||'';{const a=acctOf(g)||{};$('#sBank').value=a.bank||'';$('#sNo').value=a.no||'';$('#sHolder').value=a.holder||'';$('#sNote').value=g.note||''}$('#sPin').value='';
+function fillSet(){const g=group;$('#sName').value=g.name;$('#sDate').value=g.date||'';{const a=acctOf(g)||{};$('#sBank').value=a.bank||'';$('#sNo').value=a.no||'';$('#sHolder').value=a.holder||'';$('#sNote').value=g.note||''}$('#sPin').value='';$('#sInPin').value='';$('#sInState').textContent=g.inPin?'(설정됨 · 지출 추가만 가능)':'(없음 · 일행에게 알려줄 번호)';
   $('#sTre').innerHTML=g.members.filter(p=>!isTeam(g,p)).map(p=>`<option>${esc(p)}</option>`).join('');$('#sTre').value=treOf(g);$('#sHint').textContent='';$('#sDel').dataset.arm='';$('#sDel').textContent='모임 삭제';renderSet()}
 $('#bSet').onclick=()=>{const p=$('#pSet');p.hidden=!p.hidden;if(!p.hidden)fillSet()};
 $('#sClose').onclick=()=>$('#pSet').hidden=true;
@@ -559,8 +564,11 @@ $('#sTeamB').onclick=()=>{const t=readTeam('s'),h=$('#sHint');if(!t){h.className
   run(S.patchGroup(cur,{members:g.members.includes(t[0])?g.members:[...g.members,t[0]],sizes:{...(g.sizes||{}),[t[0]]:t[1]}})).then(()=>{fillSet();h.className='hint';h.textContent=`${t[0]} ${t[1]}명으로 저장했어요.`})};
 ['#sTeam','#sTeamN'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#sTeamB').click()}}));
 $('#sAddB').onclick=addMem;$('#sAdd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addMem()}});
-$('#sPinB').onclick=()=>{const v=$('#sPin').value.trim(),h=$('#sHint');if(!pinOk(v)){h.className='hint err';h.textContent='비밀번호는 숫자 4자리로 넣어 주세요.';return}
+$('#sPinB').onclick=()=>{const v=$('#sPin').value.trim(),h=$('#sHint');if(!pinOk(v)){h.className='hint err';h.textContent='비밀번호는 숫자 4자리로 넣어 주세요.';return}if(v===String(group.inPin||'')){h.className='hint err';h.textContent='입력용 비밀번호와 달라야 해요.';return}
   run(S.patchGroup(cur,{pin:v})).then(()=>{$('#sPin').value='';h.className='hint';h.textContent='비밀번호를 바꿨어요.'})};
+$('#sInPinB').onclick=()=>{const v=$('#sInPin').value.trim(),h=$('#sHint');h.className='hint err';if(!pinOk(v)){h.textContent='입력용 비밀번호는 숫자 4자리로 넣어 주세요.';return}if(v===String(group.pin)){h.textContent='총무 비밀번호와 달라야 해요.';return}
+  run(S.patchGroup(cur,{inPin:v})).then(()=>{fillSet();$('#sHint').className='hint';$('#sHint').textContent='입력용 비밀번호를 정했어요.'})};
+$('#sInPinX').onclick=()=>run(S.patchGroup(cur,{inPin:''})).then(()=>{fillSet();$('#sHint').className='hint';$('#sHint').textContent='입력용 비밀번호를 없앴어요. 이제 총무 비밀번호로만 들어갈 수 있어요.'});
 $('#sDel').onclick=e=>{const b=e.currentTarget;if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='한 번 더 누르면 지출까지 모두 삭제돼요';return}
   const id=cur,ids=Object.keys(exps);$('#pSet').hidden=true;goHome();run(S.delGroup(id,ids)).then(()=>toast('모임을 삭제했어요.'))};
 
@@ -572,15 +580,8 @@ $('#bRes').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)
 (async()=>{
   if(C.FIREBASE&&C.FIREBASE.projectId){try{S=await cloudStore(C.FIREBASE)}catch(e){console.error(e)}}
   if(!S)S=localStore();
-  if(S.mode==='cloud'&&!lsGet('ms-migrated',false)){const L=lsGet('ms-local',{}),n=Object.keys(L.g||{}).length;
-    if(n){$('#migTxt').textContent=`이 기기에만 저장된 모임 ${n}개가 있어요.`;$('#migBar').hidden=false;
-      $('#bMig').onclick=async()=>{$('#bMig').disabled=true;let ok=0,np=0;
-        try{for(const g of Object.values(L.g)){const x={...g};if(!/^\d{4}$/.test(String(x.pin||''))){x.pin='0000';np++}x.pin=String(x.pin);if(String(x.id).length<16)continue;
-          const E=Object.values((L.e||{})[g.id]||{});x.total=E.reduce((a,e)=>a+(+e.amount||0),0);x.count=E.length;await S.putGroup(x);for(const e of E){const{among,...rest}=e;await S.putExp(g.id,rest)}ok++}
-          lsSet('ms-migrated',true);$('#migBar').hidden=true;toast(`${ok}개 모임을 옮겼어요.${np?` 비밀번호가 없던 ${np}개는 0000으로 정했어요.`:''}`)}
-        catch(e){console.error(e);$('#bMig').disabled=false;toast('옮기지 못했어요. Firestore 규칙이 게시됐는지 확인해 주세요.')}}}}
   let pend=ss.get('ms-open');render();
-  S.list(l=>{glist=l;if(pend&&!cur){const f=l.find(g=>g.id===pend);pend=null;if(f){openGroup(f.id);return}}if(!cur)render()},err=>{console.error(err);toast('목록을 불러오지 못했어요.')});
+  S.list(l=>{glist=l;if(pend&&!cur){const f=l.find(g=>g.id===pend);pend=null;if(f){openGroup(f.id,ss.get('ms-role')||'admin');return}}if(!cur)render()},err=>{console.error(err);toast('목록을 불러오지 못했어요.')});
 })();
 </script>
 </body>
