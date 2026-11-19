@@ -205,6 +205,7 @@ tr.grp td{border-top:0;padding:12px 0 2px;font-size:12px;color:var(--mute);font-
 
 <!-- 홈: 모임 목록 -->
 <section class="home" id="homeV" hidden>
+  <div class="donebar" id="migBar" hidden style="padding:0;margin:0 0 14px"><div><span id="migTxt"></span><button class="btn acc" id="bMig">클라우드로 옮기기</button></div></div>
   <div id="hList"></div>
   <div class="foot" id="hFoot">
     <button class="btn light" id="bBak">백업 파일 저장</button>
@@ -571,6 +572,13 @@ $('#bRes').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)
 (async()=>{
   if(C.FIREBASE&&C.FIREBASE.projectId){try{S=await cloudStore(C.FIREBASE)}catch(e){console.error(e)}}
   if(!S)S=localStore();
+  if(S.mode==='cloud'&&!lsGet('ms-migrated',false)){const L=lsGet('ms-local',{}),n=Object.keys(L.g||{}).length;
+    if(n){$('#migTxt').textContent=`이 기기에만 저장된 모임 ${n}개가 있어요.`;$('#migBar').hidden=false;
+      $('#bMig').onclick=async()=>{$('#bMig').disabled=true;let ok=0,np=0;
+        try{for(const g of Object.values(L.g)){const x={...g};if(!/^\d{4}$/.test(String(x.pin||''))){x.pin='0000';np++}x.pin=String(x.pin);if(String(x.id).length<16)continue;
+          const E=Object.values((L.e||{})[g.id]||{});x.total=E.reduce((a,e)=>a+(+e.amount||0),0);x.count=E.length;await S.putGroup(x);for(const e of E){const{among,...rest}=e;await S.putExp(g.id,rest)}ok++}
+          lsSet('ms-migrated',true);$('#migBar').hidden=true;toast(`${ok}개 모임을 옮겼어요.${np?` 비밀번호가 없던 ${np}개는 0000으로 정했어요.`:''}`)}
+        catch(e){console.error(e);$('#bMig').disabled=false;toast('옮기지 못했어요. Firestore 규칙이 게시됐는지 확인해 주세요.')}}}}
   let pend=ss.get('ms-open');render();
   S.list(l=>{glist=l;if(pend&&!cur){const f=l.find(g=>g.id===pend);pend=null;if(f){openGroup(f.id);return}}if(!cur)render()},err=>{console.error(err);toast('목록을 불러오지 못했어요.')});
 })();
