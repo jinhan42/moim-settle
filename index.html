@@ -401,15 +401,15 @@ function renderReceipt(){
   ${owe.length?`<div class="prog"><i style="width:${oweAmt?(gotAmt/oweAmt*100).toFixed(1):0}%"></i></div><div class="sub" style="text-align:left">받은 돈 ${won(gotAmt)} / ${won(oweAmt)}</div>`:''}
   ${cats.length?`<hr class="dash"><div class="rc-h">분류별</div><div class="bars">${cats.map(([c,v])=>`<div class="b"><span>${esc(c)}</span><span class="t"><i style="width:${(v/mx*100).toFixed(1)}%"></i></span><span>${won(v)}</span></div>`).join('')}</div>`:''}
   <hr class="dash"><label class="rc-h" for="memo" style="display:block">총무 한마디 <span style="font-weight:400;font-size:13px;color:var(--mute)">(정산 문구에 함께 보내져요)</span></label><textarea class="txt memo" id="memo" ${isAdmin()?'':'readonly'} maxlength="300" rows="3" placeholder="예: 오늘 다들 고생 많았어요! 다음 모임은 12월 20일입니다.">${esc(g.memo||'')}</textarea>
-  ${cats.length?`<label class="incl"><input type="checkbox" id="inclCat" ${g.catOff?'':'checked'} ${isAdmin()?'':'disabled'}> 분류별 합계(식비·교통 등)도 함께 보내기</label>`:''}
-  <button class="copy" id="cp">정산 문구 보내기 (카톡 등)</button>
+  ${cats.length?`<label class="incl" ${isAdmin()?'':'hidden'}><input type="checkbox" id="inclCat" ${g.catOff?'':'checked'} ${isAdmin()?'':'disabled'}> 분류별 합계(식비·교통 등)도 함께 보내기</label>`:''}
+  ${isAdmin()?'<button class="copy" id="cp">정산 문구 보내기 (카톡 등)</button>':'<p class="hint" style="text-align:center;margin-top:14px">정산 문구 보내기는 총무만 할 수 있어요.</p>'}
   <button class="fin" id="fin" ${isAdmin()?'':'hidden'}>${isDone()?'다시 열기 (수정 가능하게)':'정산 완료 처리'}</button>`;
   $('#unit').value=String(s.u);$('#unit').onchange=e=>run(S.patchGroup(cur,{unit:+e.target.value}));
   $('#tRc').querySelectorAll('.ck').forEach(b=>b.onclick=()=>{if(!isAdmin())return;const c={...(group.checks||{})};c[b.dataset.p]=!c[b.dataset.p];run(S.patchGroup(cur,{checks:c}))});
   const saveMemo=()=>{if(!isAdmin())return;const v=$('#memo').value.trim().slice(0,300);if(v!==(group.memo||''))run(S.patchGroup(cur,{memo:v}))};
   if($('#inclCat'))$('#inclCat').onchange=e=>run(S.patchGroup(cur,{catOff:!e.target.checked}));
   $('#memo').addEventListener('blur',()=>setTimeout(saveMemo,400));
-  $('#cp').onclick=()=>{const v=$('#memo').value.trim().slice(0,300);if(isAdmin()&&v!==(group.memo||'')){group={...group,memo:v};run(S.patchGroup(cur,{memo:v}))}shareText(settleText(settle(group,gExps())),$('#cp'))};
+  if($('#cp'))$('#cp').onclick=()=>{if(!isAdmin())return;const v=$('#memo').value.trim().slice(0,300);if(isAdmin()&&v!==(group.memo||'')){group={...group,memo:v};run(S.patchGroup(cur,{memo:v}))}shareText(settleText(settle(group,gExps())),$('#cp'))};
   if($('#cpAcct'))$('#cpAcct').onclick=async e=>{const b=e.currentTarget,a=acctOf(group);try{await navigator.clipboard.writeText(`${a.bank} ${a.no}`.trim());b.textContent='복사됨'}catch(_){b.textContent='길게 눌러 복사'}setTimeout(()=>b.textContent='계좌 복사',2000)};
   if($('#addAcct'))$('#addAcct').onclick=()=>{if(!isAdmin()){toast('계좌는 총무만 입력할 수 있어요.');return}$('#pSet').hidden=false;fillSet();$('#sNo').focus();window.scrollTo({top:0,behavior:'smooth'})};
   $('#fin').onclick=()=>isDone()?reopen():run(S.patchGroup(cur,{status:'done',doneAt:Date.now()})).then(()=>toast('정산 완료로 표시했어요.'));
