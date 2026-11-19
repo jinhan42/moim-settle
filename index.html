@@ -93,6 +93,8 @@ td.c,th.c{text-align:center;width:64px}
 .rc-h select{min-height:36px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-size:13px;padding:0 6px}
 .acct{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 8px 10px 12px;font-size:14px;margin-bottom:10px}.acct div{flex:1;overflow-wrap:anywhere}.acct small{display:block;color:var(--mute);font-size:12px}.acct b{font-size:16px;font-variant-numeric:tabular-nums}.acct button{min-height:40px;border:0;border-radius:10px;background:var(--ink);color:var(--bg);font-weight:700;padding:0 12px;white-space:nowrap}
 .memo{min-height:84px;padding:10px 14px;resize:vertical;line-height:1.5;font-family:inherit}
+.tm{display:inline-block;font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;background:var(--ink);color:var(--bg);margin-left:4px;vertical-align:1px}
+tr.grp td{border-top:0;padding:12px 0 2px;font-size:12px;color:var(--mute);font-weight:700}
 .note{background:light-dark(#fff3ef,#3a2420);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;margin:-2px 0 10px;overflow-wrap:anywhere}
 .acgrid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr) minmax(0,.8fr);gap:8px}@media(max-width:600px){.acgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.acgrid input:nth-child(2){grid-column:1/-1;grid-row:1}}
 .done{text-align:center;color:var(--mute);padding:10px 0}
@@ -162,7 +164,10 @@ td.c,th.c{text-align:center;width:64px}
     <div><label class="f" for="nName">모임 이름</label><input class="txt" id="nName" placeholder="예: 11월 정기모임, 제주 여행"></div>
     <div><label class="f" for="nDate">날짜</label><input class="txt" id="nDate" type="date"></div>
   </div>
-  <label class="f" for="nMem">참여자 (쉼표나 띄어쓰기로 구분)</label><input class="txt" id="nMem" placeholder="예: 찐이, 민수, 지영, 현우">
+  <label class="f" for="nMem">개인 참여자 <span style="font-weight:400">(이름을 쉼표나 띄어쓰기로 구분)</span></label><input class="txt" id="nMem" placeholder="예: 찐이, 민수, 지영, 현우">
+  <label class="f">단체 <span style="font-weight:400">(선택 · 단체명과 인원수 — 인원수만큼 1/n 부담)</span></label>
+  <div class="inl" style="margin-top:0"><input class="txt" id="nTeam" placeholder="단체명 (예: 산악회, 3팀)"><input class="txt" id="nTeamN" type="number" inputmode="numeric" min="1" max="999" placeholder="인원" style="flex:0 0 84px"><button type="button" class="btn" id="nTeamB">추가</button></div>
+  <div class="chips" id="nTeams" style="margin-top:8px"></div>
   <div class="row2">
     <div><label class="f" for="nTre">총무</label><select class="txt" id="nTre"><option value="">참여자를 먼저 입력</option></select></div>
     <div><label class="f" for="nPin">비밀번호 (숫자 4자리)</label><input class="txt" id="nPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></div>
@@ -185,8 +190,12 @@ td.c,th.c{text-align:center;width:64px}
   <div class="acgrid"><input class="txt" id="sBank" list="bankList" placeholder="은행"><input class="txt" id="sNo" inputmode="numeric" placeholder="계좌번호 (예: 3333-01-2345678)"><input class="txt" id="sHolder" placeholder="예금주"></div>
   <label class="f" for="sNote">입금 안내 문구 <span style="font-weight:400">(선택 · 정산 문구에 표시)</span></label><input class="txt" id="sNote" maxlength="80" placeholder="예: 카톡으로 송금해 주세요 / 토스 송금 OK / 27일까지">
   <div class="inl"><button class="btn acc" id="sSave">저장</button></div>
-  <label class="f">참여자</label><div class="chips" id="sMem"></div>
-  <div class="inl"><input class="txt" id="sAdd" placeholder="추가할 이름"><button class="btn" id="sAddB">추가</button></div>
+  <label class="f">참여자 <span id="sCnt" style="font-weight:400"></span></label><div class="chips" id="sMem"></div>
+  <label class="f">개인 추가</label>
+  <div class="inl" style="margin-top:0"><input class="txt" id="sAdd" placeholder="이름 (여러 명은 쉼표로)"><button class="btn" id="sAddB">추가</button></div>
+  <label class="f">단체 <span style="font-weight:400">(선택 · 단체명과 인원수 — 인원수만큼 1/n 부담)</span></label>
+  <div class="inl" style="margin-top:0"><input class="txt" id="sTeam" placeholder="단체명 (예: 산악회, 3팀)"><input class="txt" id="sTeamN" type="number" inputmode="numeric" min="1" max="999" placeholder="인원" style="flex:0 0 84px"><button type="button" class="btn" id="sTeamB">추가</button></div>
+  <p class="hint" style="margin-top:4px">같은 단체명을 다시 추가하면 인원수가 바뀌어요.</p>
   <label class="f" for="sPin">비밀번호 변경 (숫자 4자리)</label>
   <div class="inl" style="margin-top:0"><input class="txt" id="sPin" type="password" inputmode="numeric" maxlength="4" placeholder="새 비밀번호" autocomplete="off"><button class="btn light" id="sPinB">변경</button></div>
   <p class="hint" id="sHint"></p>
@@ -303,10 +312,14 @@ const F={payer:null,cat:'식비',edit:null,place:null,view:null,autoTitle:''};
 const fail=e=>{console.error(e);toast('저장하지 못했어요. 인터넷 연결이나 설정을 확인해 주세요.')};
 const run=p=>Promise.resolve(p).catch(fail);
 const gExps=()=>Object.values(exps).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.ts||0)-(a.ts||0));
-const treOf=g=>g&&g.members&&g.members.includes(g.treasurer)?g.treasurer:(g&&g.members?g.members[0]:null);
+const treOf=g=>g&&g.members&&g.members.includes(g.treasurer)?g.treasurer:(g&&g.members?(g.members.find(p=>!(g.sizes&&g.sizes[p]>0))||g.members[0]):null);
 const acctOf=g=>{if(!g)return null;if(g.acctNo)return{bank:g.bank||'',no:g.acctNo,holder:g.holder||''};if(g.account)return{bank:'',no:g.account,holder:''};return null};
 const acctStr=a=>a?[a.bank,a.no,a.holder&&`(${a.holder})`].filter(Boolean).join(' '):'';
 const readAcct=p=>({bank:$('#'+p+'Bank').value.trim().slice(0,20),acctNo:$('#'+p+'No').value.trim().replace(/[^\d-]/g,'').slice(0,30),holder:$('#'+p+'Holder').value.trim().slice(0,20),note:$('#'+p+'Note').value.trim().slice(0,80)});
+const sizeOf=(g,p)=>g&&g.sizes&&g.sizes[p]>0?+g.sizes[p]:1;
+const isTeam=(g,p)=>!!(g&&g.sizes&&g.sizes[p]>0);
+const heads=g=>(g&&g.members||[]).reduce((t,p)=>t+sizeOf(g,p),0);
+const headStr=g=>{const m=g.members||[],t=m.filter(p=>isTeam(g,p));if(!t.length)return`${m.length}명`;const tn=t.reduce((a,p)=>a+sizeOf(g,p),0);return`${heads(g)}명 (개인 ${m.length-t.length} · 단체 ${t.length}곳 ${tn}명)`};
 const isDone=()=>group&&group.status==='done';
 const syncTotal=next=>{const v=Object.values(next);run(S.patchGroup(cur,{total:v.reduce((s,x)=>s+x.amount,0),count:v.length}))};
 async function putExp(x){const next={...exps,[x.id]:x};await run(S.putExp(cur,x));syncTotal(next)}
@@ -323,18 +336,18 @@ function openGroup(gid){
 
 /* ---------- 정산 계산 (1/n) ---------- */
 function settle(g,list){
-  const m=g.members||[],n=m.length,tre=treOf(g),u=g.unit||100,paid={},cat={};let total=0;
+  const m=g.members||[],n=heads(g),tre=treOf(g),u=g.unit||100,paid={},cat={};let total=0;
   m.forEach(p=>paid[p]=0);
   list.forEach(x=>{total+=x.amount;paid[x.payer in paid?x.payer:tre]+=x.amount;const c=x.cat||'기타';cat[c]=(cat[c]||0)+x.amount});
   const raw=n?total/n:0,share=n?Math.ceil(raw/u-1e-9)*u:0;
-  const rows=m.map(p=>({p,paid:paid[p],send:p===tre?0:share-paid[p],tre:p===tre}));
+  const rows=m.map(p=>({p,size:sizeOf(g,p),team:isTeam(g,p),paid:paid[p],send:p===tre?share*(sizeOf(g,p)-1)-0:share*sizeOf(g,p)-paid[p],tre:p===tre})).map(r=>r.tre?{...r,send:0}:r).sort((a,b)=>(b.tre-a.tre)||(a.team-b.team));
   return{m,n,tre,u,total,raw,share,rows,surplus:share*n-total,cat};
 }
 
 /* ---------- 홈 ---------- */
 function renderHome(){
   const L=[...glist].sort((a,b)=>(a.status==='done')-(b.status==='done')||(b.date||'').localeCompare(a.date||'')||(b.created||0)-(a.created||0));
-  const card=g=>`<button class="gcard" data-id="${esc(g.id)}"><span><b>${esc(g.name)}</b><small>${dt(g.date)} · ${(g.members||[]).length}명 · 총무 ${esc(treOf(g)||'')}</small></span><span class="gr"><span class="badge ${g.status==='done'?'dn':''}">${g.pin?LOCK:''}${g.status==='done'?'정산 완료':'진행 중'}</span><b>${won(g.total||0)}</b></span></button>`;
+  const card=g=>`<button class="gcard" data-id="${esc(g.id)}"><span><b>${esc(g.name)}</b><small>${dt(g.date)} · ${heads(g)}명 · 총무 ${esc(treOf(g)||'')}</small></span><span class="gr"><span class="badge ${g.status==='done'?'dn':''}">${g.pin?LOCK:''}${g.status==='done'?'정산 완료':'진행 중'}</span><b>${won(g.total||0)}</b></span></button>`;
   const open=L.filter(g=>g.status!=='done'),done=L.filter(g=>g.status==='done');
   $('#hList').innerHTML=L.length?(open.length?`<div class="sec">진행 중 ${open.length}</div>`+open.map(card).join(''):'')+(done.length?`<div class="sec">정산 완료 ${done.length}</div>`+done.map(card).join(''):'')
     :`<div class="empty"><h2 style="font-size:26px">아직 모임이 없어요</h2><p>총무가 모임을 만들고 결제할 때마다 금액을 넣으면, 끝나고 1/n 금액과 입금 현황을 한 번에 정리해 줍니다.</p><div class="inl" style="justify-content:center;flex-wrap:wrap"><button class="btn acc" id="eNew">+ 새 모임 만들기</button><button class="btn light" id="eDemo">예시 모임 보기 (비번 0000)</button></div></div>`;
@@ -374,12 +387,12 @@ function renderReceipt(){
   const uLab={1:'1원 단위',10:'10원 단위 올림',100:'100원 단위 올림',1000:'1,000원 단위 올림'}[s.u]||'';
   $('#tRc').innerHTML=`<div class="rc-t">정 산 영 수 증</div><div class="rc-name">${esc(g.name)}${g.date?` · ${dt(g.date)}`:''}</div>
   <div class="total">${won(s.total)}</div>
-  <div class="per">${s.n}명 · 1인 <b>${won(s.share)}</b></div>
+  <div class="per">${s.n}명 · 1인 <b>${won(s.share)}</b></div>${s.rows.some(r=>r.team)?`<div class="sub">${esc(headStr(g).replace(/^\d+명 \((.*)\)$/,'$1'))}</div>`:''}
   <div class="sub">${s.total?`${fmt(s.total)} ÷ ${s.n} = ${s.raw.toLocaleString('ko-KR',{maximumFractionDigits:1})}원 → ${uLab}`:'지출을 입력하면 1/n 금액이 나와요'}${s.surplus>0?` · 남는 돈 ${won(s.surplus)}`:''}</div>
   <div class="rc-h" style="margin-top:12px;justify-content:center"><select id="unit" aria-label="끝전 처리"><option value="1">끝전 그대로 (1원 단위)</option><option value="10">10원 단위 올림</option><option value="100">100원 단위 올림</option><option value="1000">1,000원 단위 올림</option></select></div>
   <hr class="dash"><div class="rc-h"><span>총무 ${esc(s.tre)}에게 입금</span><span style="font-weight:500;font-size:13px;color:var(--mute)">${got.length}/${owe.length}명 완료</span></div>
   ${acctOf(g)?`<div class="acct"><div><small>입금 계좌</small>${esc(acctOf(g).bank)} <b>${esc(acctOf(g).no)}</b>${acctOf(g).holder?` <span>${esc(acctOf(g).holder)}</span>`:''}</div><button id="cpAcct" type="button">계좌 복사</button></div>`:`<div class="acct"><div><small>입금 계좌</small>아직 없어요</div><button id="addAcct" type="button">계좌 입력</button></div>`}${g.note?`<div class="note">${esc(g.note)}</div>`:''}
-  <table><thead><tr><th>이름</th><th>결제한 돈</th><th>보낼 돈</th><th class="c">입금</th></tr></thead><tbody>${s.rows.map(r=>`<tr><td>${esc(r.p)}${r.tre?' <span style="color:var(--mute);font-size:12px">총무</span>':''}</td><td>${r.paid?fmt(r.paid):'-'}</td><td class="${r.send>0?'neg':r.send<0?'pos':''}">${r.tre?'-':r.send>0?fmt(r.send):r.send<0?`받을 돈 ${fmt(-r.send)}`:'0'}</td><td class="c">${r.send>0?`<button class="ck" data-p="${esc(r.p)}" aria-pressed="${!!chk[r.p]}">${chk[r.p]?'완료':'미입금'}</button>`:''}</td></tr>`).join('')}</tbody></table>
+  <table><thead><tr><th>이름</th><th>결제한 돈</th><th>보낼 돈</th><th class="c">입금</th></tr></thead><tbody>${s.rows.map((r,i,a)=>`${a.some(x=>x.team)&&(i===0||a[i-1].team!==r.team)?`<tr class="grp"><td colspan="4">${r.team?`단체 ${a.filter(x=>x.team).length}곳`:`개인 ${a.filter(x=>!x.team).length}명`}</td></tr>`:''}<tr><td>${esc(r.p)}${r.team?`<span class="tm">${r.size}명</span>`:''}${r.tre?' <span style="color:var(--mute);font-size:12px">총무</span>':''}</td><td>${r.paid?fmt(r.paid):'-'}</td><td class="${r.send>0?'neg':r.send<0?'pos':''}">${r.tre?'-':r.send>0?fmt(r.send):r.send<0?`받을 돈 ${fmt(-r.send)}`:'0'}</td><td class="c">${r.send>0?`<button class="ck" data-p="${esc(r.p)}" aria-pressed="${!!chk[r.p]}">${chk[r.p]?'완료':'미입금'}</button>`:''}</td></tr>`).join('')}</tbody></table>
   ${owe.length?`<div class="prog"><i style="width:${oweAmt?(gotAmt/oweAmt*100).toFixed(1):0}%"></i></div><div class="sub" style="text-align:left">받은 돈 ${won(gotAmt)} / ${won(oweAmt)}</div>`:''}
   ${cats.length?`<hr class="dash"><div class="rc-h">분류별</div><div class="bars">${cats.map(([c,v])=>`<div class="b"><span>${esc(c)}</span><span class="t"><i style="width:${(v/mx*100).toFixed(1)}%"></i></span><span>${won(v)}</span></div>`).join('')}</div>`:''}
   <hr class="dash"><label class="rc-h" for="memo" style="display:block">총무 한마디 <span style="font-weight:400;font-size:13px;color:var(--mute)">(정산 문구에 함께 보내져요)</span></label><textarea class="txt memo" id="memo" maxlength="300" rows="3" placeholder="예: 오늘 다들 고생 많았어요! 다음 모임은 12월 20일입니다.">${esc(g.memo||'')}</textarea>
@@ -395,8 +408,10 @@ function renderReceipt(){
   $('#fin').onclick=()=>isDone()?reopen():run(S.patchGroup(cur,{status:'done',doneAt:Date.now()})).then(()=>toast('정산 완료로 표시했어요.'));
 }
 function settleText(s){const g=group,chk=g.checks||{};
-  return `[${g.name}] 정산${g.date?` (${dt(g.date)})`:''}\n총 ${won(s.total)} ÷ ${s.n}명 = 1인 ${won(s.share)}\n`+(acctOf(g)?`입금 계좌: ${acctStr(acctOf(g))}\n(총무 ${s.tre})\n`:`총무 ${s.tre}에게 입금해 주세요\n`)+(g.note?`※ ${g.note}\n`:'')+'\n'+
-  s.rows.filter(r=>!r.tre).map(r=>r.send>0?`${r.p} ${won(r.send)}${r.paid?` (결제 ${won(r.paid)} 제외)`:''}${chk[r.p]?' ✔':''}`:r.send<0?`${r.p} ${won(-r.send)} 돌려받음`:`${r.p} 정산 끝`).join('\n')+
+  return `[${g.name}] 정산${g.date?` (${dt(g.date)})`:''}\n총 ${won(s.total)} ÷ ${s.n}명 = 1인 ${won(s.share)}\n`+(s.rows.some(r=>r.team)?`(${headStr(g).replace(/^\d+명 \((.*)\)$/,'$1')})\n`:'')+(acctOf(g)?`입금 계좌: ${acctStr(acctOf(g))}\n(총무 ${s.tre})\n`:`총무 ${s.tre}에게 입금해 주세요\n`)+(g.note?`※ ${g.note}\n`:'')+'\n'+
+  (()=>{const line=r=>{const nm=r.team?`${r.p}(${r.size}명)`:r.p;return r.send>0?`${nm} ${won(r.send)}${r.paid?` (결제 ${won(r.paid)} 제외)`:''}${chk[r.p]?' ✔':''}`:r.send<0?`${nm} ${won(-r.send)} 돌려받음`:`${nm} 정산 끝`};
+    const P=s.rows.filter(r=>!r.tre&&!r.team),T=s.rows.filter(r=>!r.tre&&r.team);
+    return T.length?`[개인]\n`+P.map(line).join('\n')+`\n\n[단체]\n`+T.map(line).join('\n'):P.map(line).join('\n')})()+
   (g.memo?`\n\n[총무 한마디]\n${g.memo}`:'')+`\n\n[내역]\n`+gExps().slice().reverse().map(x=>`${x.date?x.date.slice(5).replace('-','/'):''} ${x.title||x.cat} ${won(x.amount)}`).join('\n')+(s.surplus>0?`\n\n남는 돈 ${won(s.surplus)}`:'')}
 function reopen(){askPin(group,()=>run(S.patchGroup(cur,{status:'open'})).then(()=>{tab('in');toast('다시 수정할 수 있어요.')}))}
 
@@ -407,7 +422,7 @@ function render(){
   if(!cur){$('#hTitle').textContent='모임 경비 정산';$('#sync').textContent=S.mode==='cloud'?'Firebase에 저장 중 · 여러 기기에서 같은 목록이 보여요':'이 기기에 저장 중';$('#hFoot').hidden=S.mode!=='local';renderHome();return}
   if(!group)return;
   $('#hTitle').textContent=group.name;
-  $('#sync').textContent=`${dt(group.date)} · ${group.members.length}명 · 총무 ${treOf(group)} · ${isDone()?'정산 완료':'진행 중'}${group.pin?'':' · 비밀번호 없음 (설정에서 지정)'}`;
+  $('#sync').textContent=`${dt(group.date)} · ${headStr(group)} · 총무 ${treOf(group)} · ${isDone()?'정산 완료':'진행 중'}${group.pin?'':' · 비밀번호 없음 (설정에서 지정)'}`;
   if(isDone()){$('#doneTxt').textContent=`정산 완료된 모임이에요${group.doneAt?` (${dt(new Date(group.doneAt).toISOString().slice(0,10))})`:''} · 보기 전용`}
   $('#tIn').hidden=isDone();
   renderForm();renderList();renderReceipt();if(!$('#pSet').hidden)renderSet();
@@ -505,31 +520,40 @@ const parseMem=s=>[...new Set(s.split(/[,\s、·]+/).map(t=>t.trim().slice(0,12)
 const pinOk=v=>/^\d{4}$/.test(v);
 function openNew(){$('#pNew').hidden=false;$('#nHint').className='hint';$('#nHint').textContent='목록에서 이 모임을 열 때 비밀번호를 물어봐요.';if(!$('#nDate').value)$('#nDate').value=today();$('#nName').focus()}
 $('#bNew').onclick=openNew;$('#nNo').onclick=()=>$('#pNew').hidden=true;
+let nTeams={};
+const teamChips=()=>{$('#nTeams').innerHTML=Object.entries(nTeams).map(([k,v])=>`<span class="mchip">${esc(k)}<span class="tm">${v}명</span><button type="button" data-k="${esc(k)}" aria-label="${esc(k)} 빼기">✕</button></span>`).join('');$('#nTeams').querySelectorAll('button').forEach(b=>b.onclick=()=>{delete nTeams[b.dataset.k];teamChips()})};
+const readTeam=p=>{const nm=$('#'+p+'Team').value.trim().replace(/[,]/g,' ').slice(0,16),n=parseInt($('#'+p+'TeamN').value,10);if(!nm||!(n>=1&&n<=999))return null;$('#'+p+'Team').value='';$('#'+p+'TeamN').value='';return[nm,n]};
+$('#nTeamB').onclick=()=>{const t=readTeam('n');if(!t){$('#nHint').className='hint err';$('#nHint').textContent='단체명과 인원수(1~999)를 넣어 주세요.';return}nTeams[t[0]]=t[1];teamChips();$('#nTeam').focus()};
+['#nTeam','#nTeamN'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#nTeamB').click()}}));
 $('#nMem').addEventListener('input',()=>{const m=parseMem($('#nMem').value),v=$('#nTre').value;$('#nTre').innerHTML=m.length?m.map(p=>`<option>${esc(p)}</option>`).join(''):'<option value="">참여자를 먼저 입력</option>';if(m.includes(v))$('#nTre').value=v});
-$('#nOk').onclick=()=>{const name=$('#nName').value.trim(),m=parseMem($('#nMem').value),pin=$('#nPin').value.trim(),h=$('#nHint');h.className='hint err';
-  if(!name){h.textContent='모임 이름을 넣어 주세요.';return}if(m.length<2){h.textContent='참여자를 2명 이상 넣어 주세요.';return}if(!pinOk(pin)){h.textContent='비밀번호는 숫자 4자리로 넣어 주세요.';return}
-  const g={id:rid(20),name:name.slice(0,40),date:$('#nDate').value||today(),members:m,treasurer:m.includes($('#nTre').value)?$('#nTre').value:m[0],pin,unit:100,status:'open',checks:{},...readAcct('n'),total:0,count:0,created:Date.now()};
-  ['#nName','#nMem','#nPin','#nBank','#nNo','#nHolder','#nNote'].forEach(s=>$(s).value='');$('#nDate').value='';$('#nTre').innerHTML='<option value="">참여자를 먼저 입력</option>';$('#pNew').hidden=true;
+$('#nOk').onclick=()=>{const name=$('#nName').value.trim(),solo=parseMem($('#nMem').value).filter(x=>!(x in nTeams)),m=[...solo,...Object.keys(nTeams)],sizes={...nTeams},hc=solo.length+Object.values(nTeams).reduce((a,b)=>a+b,0),pin=$('#nPin').value.trim(),h=$('#nHint');h.className='hint err';
+  if(!name){h.textContent='모임 이름을 넣어 주세요.';return}if(!solo.length){h.textContent='총무를 포함해 개인 참여자를 1명 이상 넣어 주세요.';return}if(hc<2){h.textContent='참여 인원이 2명 이상이어야 해요.';return}if(m.length>60){h.textContent='참여자(개인+단체)는 60개까지 넣을 수 있어요.';return}if(!pinOk(pin)){h.textContent='비밀번호는 숫자 4자리로 넣어 주세요.';return}
+  const g={id:rid(20),name:name.slice(0,40),date:$('#nDate').value||today(),members:m,sizes,treasurer:solo.includes($('#nTre').value)?$('#nTre').value:solo[0],pin,unit:100,status:'open',checks:{},...readAcct('n'),total:0,count:0,created:Date.now()};
+  ['#nName','#nMem','#nPin','#nBank','#nNo','#nHolder','#nNote'].forEach(s=>$(s).value='');nTeams={};teamChips();$('#nDate').value='';$('#nTre').innerHTML='<option value="">참여자를 먼저 입력</option>';$('#pNew').hidden=true;
   run(S.putGroup(g)).then(()=>openGroup(g.id))};
-function demo(){const d=today(),g={id:rid(20),name:'11월 정기모임 (예시)',date:d,members:['찐이','민수','지영','현우','수진'],treasurer:'찐이',pin:'0000',unit:100,status:'open',checks:{'민수':true},bank:'카카오뱅크',acctNo:'3333-00-0000000',holder:'찐이',note:'카톡으로 송금해 주세요',created:Date.now()};
-  const X=[['1차 삼겹살',186000,'찐이','식비'],['2차 호프',92500,'찐이','술·카페'],['노래방',44000,'민수','입장·체험'],['대리운전',25000,'찐이','교통']];
+function demo(){const d=today(),g={id:rid(20),name:'11월 정기모임 (예시)',date:d,members:['찐이','민수','지영','현우','수진','등산동호회'],sizes:{'등산동호회':4},treasurer:'찐이',pin:'0000',unit:100,status:'open',checks:{'민수':true},bank:'카카오뱅크',acctNo:'3333-00-0000000',holder:'찐이',note:'카톡으로 송금해 주세요',created:Date.now()};
+  const X=[['1차 삼겹살',312000,'찐이','식비'],['2차 호프',142500,'찐이','술·카페'],['노래방',44000,'민수','입장·체험'],['대리운전',25000,'찐이','교통']];
   const e={};X.forEach((s,k)=>{const id=rid(16);e[id]={id,title:s[0],amount:s[1],payer:s[2],cat:s[3],date:d,place:null,ts:Date.now()+k}});
   g.total=X.reduce((s,x)=>s+x[1],0);g.count=X.length;
   run((async()=>{await S.putGroup(g);for(const x of Object.values(e))await S.putExp(g.id,x)})()).then(()=>toast('예시 모임을 만들었어요. 비밀번호는 0000이에요.'))}
 function renderSet(){const g=group;if(!g)return;const used=new Set(gExps().map(x=>x.payer));
-  $('#sMem').innerHTML=(g.members||[]).map((p,k)=>`<span class="mchip">${esc(p)}<button data-k="${k}" aria-label="${esc(p)} 빼기">✕</button></span>`).join('');
+  $('#sCnt').textContent=`· ${headStr(g)}`;
+  $('#sMem').innerHTML=(g.members||[]).map((p,k)=>`<span class="mchip">${esc(p)}${isTeam(g,p)?`<span class="tm">${sizeOf(g,p)}명</span>`:''}<button data-k="${k}" aria-label="${esc(p)} 빼기">✕</button></span>`).join('');
   $('#sMem').querySelectorAll('button').forEach(b=>b.onclick=()=>{const p=g.members[+b.dataset.k],h=$('#sHint');h.className='hint err';
-    if(g.members.length<=2){h.textContent='참여자는 2명 이상이어야 해요.';return}
+    if(heads(g)-sizeOf(g,p)<2){h.textContent='참여 인원은 2명 이상이어야 해요.';return}
     if(used.has(p)){h.textContent=`${p} 님이 결제한 지출이 있어 뺄 수 없어요. 해당 지출의 결제자를 먼저 바꾸세요.`;return}
     if(p===treOf(g)){h.textContent='총무는 뺄 수 없어요. 총무를 먼저 바꾸세요.';return}
-    const c={...(g.checks||{})};delete c[p];run(S.patchGroup(cur,{members:g.members.filter(x=>x!==p),checks:c}))})}
+    const c={...(g.checks||{})},z={...(g.sizes||{})};delete c[p];delete z[p];run(S.patchGroup(cur,{members:g.members.filter(x=>x!==p),checks:c,sizes:z}))})}
 function fillSet(){const g=group;$('#sName').value=g.name;$('#sDate').value=g.date||'';{const a=acctOf(g)||{};$('#sBank').value=a.bank||'';$('#sNo').value=a.no||'';$('#sHolder').value=a.holder||'';$('#sNote').value=g.note||''}$('#sPin').value='';
-  $('#sTre').innerHTML=g.members.map(p=>`<option>${esc(p)}</option>`).join('');$('#sTre').value=treOf(g);$('#sHint').textContent='';$('#sDel').dataset.arm='';$('#sDel').textContent='모임 삭제';renderSet()}
+  $('#sTre').innerHTML=g.members.filter(p=>!isTeam(g,p)).map(p=>`<option>${esc(p)}</option>`).join('');$('#sTre').value=treOf(g);$('#sHint').textContent='';$('#sDel').dataset.arm='';$('#sDel').textContent='모임 삭제';renderSet()}
 $('#bSet').onclick=()=>{const p=$('#pSet');p.hidden=!p.hidden;if(!p.hidden)fillSet()};
 $('#sClose').onclick=()=>$('#pSet').hidden=true;
 $('#sSave').onclick=()=>{const n=$('#sName').value.trim();if(!n){$('#sHint').className='hint err';$('#sHint').textContent='모임 이름을 넣어 주세요.';return}
   run(S.patchGroup(cur,{name:n.slice(0,40),date:$('#sDate').value||group.date||today(),treasurer:$('#sTre').value,...readAcct('s'),account:''})).then(()=>{$('#sHint').className='hint';$('#sHint').textContent='저장했어요.'})};
-const addMem=()=>{const g=group,add=parseMem($('#sAdd').value).filter(x=>!g.members.includes(x));if(!add.length)return;$('#sAdd').value='';run(S.patchGroup(cur,{members:[...g.members,...add].slice(0,40)})).then(fillSet)};
+const addMem=()=>{const g=group,add=parseMem($('#sAdd').value).filter(x=>!g.members.includes(x));if(!add.length)return;$('#sAdd').value='';run(S.patchGroup(cur,{members:[...g.members,...add].slice(0,60)})).then(fillSet)};
+$('#sTeamB').onclick=()=>{const t=readTeam('s'),h=$('#sHint');if(!t){h.className='hint err';h.textContent='단체명과 인원수(1~999)를 넣어 주세요.';return}const g=group;if(g.members.includes(t[0])&&!isTeam(g,t[0])){h.className='hint err';h.textContent='같은 이름의 개인 참여자가 있어요.';return}
+  run(S.patchGroup(cur,{members:g.members.includes(t[0])?g.members:[...g.members,t[0]],sizes:{...(g.sizes||{}),[t[0]]:t[1]}})).then(()=>{fillSet();h.className='hint';h.textContent=`${t[0]} ${t[1]}명으로 저장했어요.`})};
+['#sTeam','#sTeamN'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#sTeamB').click()}}));
 $('#sAddB').onclick=addMem;$('#sAdd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addMem()}});
 $('#sPinB').onclick=()=>{const v=$('#sPin').value.trim(),h=$('#sHint');if(!pinOk(v)){h.className='hint err';h.textContent='비밀번호는 숫자 4자리로 넣어 주세요.';return}
   run(S.patchGroup(cur,{pin:v})).then(()=>{$('#sPin').value='';h.className='hint';h.textContent='비밀번호를 바꿨어요.'})};
