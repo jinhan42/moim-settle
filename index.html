@@ -178,13 +178,13 @@ tr.grp td{border-top:0;padding:12px 0 2px;font-size:12px;color:var(--mute);font-
     <div><label class="f" for="nTre">총무 이름</label><input class="txt" id="nTre" maxlength="12" placeholder="예: 찐이"></div>
     <div><label class="f" for="nPin">총무 비밀번호 (숫자 4자리)</label><input class="txt" id="nPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••"></div>
   </div>
-  <label class="f" for="nFund">회비 <span style="font-weight:400">(선택 · 걷어 둔 금액을 넣으면 잔액·부족액을 보여 줘요)</span></label><input class="txt" id="nFund" inputmode="numeric" placeholder="예: 500,000" style="max-width:240px">
   <div class="inl"><button class="btn acc" id="nOk">만들기</button><button class="btn light" id="nNo">닫기</button></div>
-  <p class="hint" id="nHint">기본은 총무가 회비 사용 내역을 공유하는 방식이에요.</p>
+  <p class="hint" id="nHint">기본은 총무가 회비로 쓴 전체 사용 내역을 회원들과 공유하는 방식이에요.</p>
   <div class="opts">
     <div class="optt">옵션 <span>필요할 때만 켜세요 · 나중에 설정에서도 켤 수 있어요</span></div>
-    <label class="opt"><input type="checkbox" id="nSplit"><span><b>개인별 각출</b><small>회비가 없거나 부족해서 회원에게 나눠 받을 때. 회비를 넣었으면 부족분만 1/n로 나눠요.</small></span></label>
+    <label class="opt"><input type="checkbox" id="nSplit"><span><b>개인별 각출 (추가 경비 · 현장 각출)</b><small>현장에서 바로 걷거나, 회비가 모자라 회원에게 추가로 나눠 받아야 할 때 켜세요.</small></span></label>
     <div class="optbox" id="nSplitBox" hidden>
+      <label class="f" for="nFund">회비에서 쓸 금액 <span style="font-weight:400">(선택 · 넣으면 이 금액을 뺀 나머지만 1/n로 나눠요. 비우면 전체를 나눠요)</span></label><input class="txt" id="nFund" inputmode="numeric" placeholder="예: 300,000" style="max-width:240px">
       <label class="f" for="nMem">개인 회원 <span style="font-weight:400">(이름을 쉼표나 띄어쓰기로 구분 · 총무는 자동 포함)</span></label><input class="txt" id="nMem" placeholder="예: 민수, 지영, 현우">
       <label class="f">단체 <span style="font-weight:400">(단체명과 인원수 — 인원수만큼 1/n 부담)</span></label>
       <div class="inl" style="margin-top:0"><input class="txt" id="nTeam" placeholder="단체명 (예: 산악회, 3팀)"><input class="txt" id="nTeamN" type="number" inputmode="numeric" min="1" max="999" placeholder="인원" style="flex:0 0 84px"><button type="button" class="btn" id="nTeamB">추가</button></div>
@@ -206,14 +206,12 @@ tr.grp td{border-top:0;padding:12px 0 2px;font-size:12px;color:var(--mute);font-
     <div><label class="f" for="sName">모임(단체) 이름</label><input class="txt" id="sName"></div>
     <div><label class="f" for="sDate">날짜</label><input class="txt" id="sDate" type="date"></div>
   </div>
-  <div class="row2">
-    <div><label class="f" for="sTre">총무 이름</label><input class="txt" id="sTre" maxlength="12"></div>
-    <div><label class="f" for="sFund">회비 <span style="font-weight:400">(선택)</span></label><input class="txt" id="sFund" inputmode="numeric" placeholder="예: 500,000"></div>
-  </div>
+  <label class="f" for="sTre">총무 이름</label><input class="txt" id="sTre" maxlength="12" style="max-width:320px">
   <div class="opts">
     <div class="optt">옵션</div>
-    <label class="opt"><input type="checkbox" id="sSplit"><span><b>개인별 각출</b><small>회비가 없거나 부족해서 회원에게 나눠 받을 때. 회비를 넣었으면 부족분만 1/n로 나눠요.</small></span></label>
+    <label class="opt"><input type="checkbox" id="sSplit"><span><b>개인별 각출 (추가 경비 · 현장 각출)</b><small>현장에서 바로 걷거나, 회비가 모자라 회원에게 추가로 나눠 받아야 할 때 켜세요.</small></span></label>
     <div class="optbox" id="sSplitBox" hidden>
+      <label class="f" for="sFund">회비에서 쓸 금액 <span style="font-weight:400">(선택 · 넣으면 이 금액을 뺀 나머지만 1/n로 나눠요. 비우면 전체를 나눠요)</span></label><input class="txt" id="sFund" inputmode="numeric" placeholder="예: 300,000" style="max-width:240px">
       <label class="f">참여자 <span id="sCnt" style="font-weight:400"></span></label><div class="chips" id="sMem"></div>
       <label class="f">개인 추가</label>
       <div class="inl" style="margin-top:0"><input class="txt" id="sAdd" placeholder="이름 (여러 명은 쉼표로)"><button class="btn" id="sAddB">추가</button></div>
@@ -377,7 +375,7 @@ function settle(g,list){
   const m=g.members||[],n=heads(g),tre=treOf(g),u=g.unit||100,paid={},cat={};let total=0;
   m.forEach(p=>paid[p]=0);
   list.forEach(x=>{total+=x.amount;paid[x.payer in paid?x.payer:tre]+=x.amount;const c=x.cat||'기타';cat[c]=(cat[c]||0)+x.amount});
-  const fund=+g.fund||0,split=isSplit(g),base=Math.max(0,total-fund),raw=n?base/n:0,share=split&&n?Math.ceil(raw/u-1e-9)*u:0;
+  const split=isSplit(g),fund=split?(+g.fund||0):0,base=Math.max(0,total-fund),raw=n?base/n:0,share=split&&n?Math.ceil(raw/u-1e-9)*u:0;
   const rows=m.map(p=>({p,size:sizeOf(g,p),team:isTeam(g,p),paid:paid[p],send:p===tre?share*(sizeOf(g,p)-1)-0:share*sizeOf(g,p)-paid[p],tre:p===tre})).map(r=>r.tre?{...r,send:0}:r).sort((a,b)=>(b.tre-a.tre)||(a.team-b.team));
   return{m,n,tre,u,total,raw,share,rows:split?rows:[],surplus:split&&base?share*n-base:0,cat,fund,bal:fund-total,split,base};
 }
@@ -587,7 +585,7 @@ $('#nOk').onclick=()=>{const h=$('#nHint');h.className='hint err';const name=$('
   if(split){const solo=parseMem($('#nMem').value).filter(x=>x!==tre&&!(x in nTeams));m=[tre,...solo,...Object.keys(nTeams)];sizes={...nTeams};
     const hc=1+solo.length+Object.values(nTeams).reduce((a,b)=>a+b,0);if(hc<2){h.textContent='개인별 각출: 총무 외에 회원이나 단체를 넣어 주세요.';return}if(m.length>60){h.textContent='참여자(개인+단체)는 60개까지 넣을 수 있어요.';return}}
   if(share){if(!pinOk(inPin)){h.textContent='공동 입력: 입력용 비밀번호를 숫자 4자리로 넣어 주세요.';return}if(inPin===pin){h.textContent='입력용 비밀번호는 총무 비밀번호와 달라야 해요.';return}}
-  const g={id:rid(20),name:name.slice(0,40),date:$('#nDate').value||today(),members:m,sizes,treasurer:tre,pin,inPin,split,fund:numIn('#nFund'),unit:100,status:'open',checks:{},...(split?readAcct('n'):{}),total:0,count:0,created:Date.now()};
+  const g={id:rid(20),name:name.slice(0,40),date:$('#nDate').value||today(),members:m,sizes,treasurer:tre,pin,inPin,split,fund:split?numIn('#nFund'):0,unit:100,status:'open',checks:{},...(split?readAcct('n'):{}),total:0,count:0,created:Date.now()};
   ['#nName','#nTre','#nFund','#nMem','#nPin','#nInPin','#nBank','#nNo','#nHolder','#nNote'].forEach(x=>$(x).value='');nTeams={};teamChips();$('#nDate').value='';['#nSplit','#nShare'].forEach(x=>$(x).checked=false);$('#nSplitBox').hidden=$('#nShareBox').hidden=true;$('#pNew').hidden=true;
   run(S.putGroup(g)).then(()=>openGroup(g.id,'admin'))};
 
@@ -617,15 +615,15 @@ $('#sSave').onclick=()=>{const n=$('#sName').value.trim(),t=$('#sTre').value.tri
   const g=group,old=treOf(g);let members=g.members;if(t!==old){if(g.members.includes(t)&&isTeam(g,t)){h.textContent='같은 이름의 단체가 있어요.';return}members=g.members.includes(t)?g.members:g.members.map(x=>x===old?t:x)}
   run(S.patchGroup(cur,{name:n.slice(0,40),date:$('#sDate').value||g.date||today(),treasurer:t,members,fund:numIn('#sFund'),...readAcct('s'),account:''})).then(()=>{h.className='hint';h.textContent='저장했어요.'})};
 
-const addMem=()=>{const g=group,add=parseMem($('#sAdd').value).filter(x=>!g.members.includes(x));if(!add.length)return;$('#sAdd').value='';run(S.patchGroup(cur,{members:[...g.members,...add].slice(0,60)})).then(fillSet)};
+const addMem=()=>{const g=group,add=parseMem($('#sAdd').value).filter(x=>!g.members.includes(x));if(!add.length)return;$('#sAdd').value='';run(S.patchGroup(cur,{members:[...g.members,...add].slice(0,60)})).then(renderSet)};
 $('#sTeamB').onclick=()=>{const t=readTeam('s'),h=$('#sHint');if(!t){h.className='hint err';h.textContent='단체명과 인원수(1~999)를 넣어 주세요.';return}const g=group;if(g.members.includes(t[0])&&!isTeam(g,t[0])){h.className='hint err';h.textContent='같은 이름의 개인 참여자가 있어요.';return}
-  run(S.patchGroup(cur,{members:g.members.includes(t[0])?g.members:[...g.members,t[0]],sizes:{...(g.sizes||{}),[t[0]]:t[1]}})).then(()=>{fillSet();h.className='hint';h.textContent=`${t[0]} ${t[1]}명으로 저장했어요.`})};
+  run(S.patchGroup(cur,{members:g.members.includes(t[0])?g.members:[...g.members,t[0]],sizes:{...(g.sizes||{}),[t[0]]:t[1]}})).then(()=>{renderSet();h.className='hint';h.textContent=`${t[0]} ${t[1]}명으로 저장했어요.`})};
 ['#sTeam','#sTeamN'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#sTeamB').click()}}));
 $('#sAddB').onclick=addMem;$('#sAdd').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addMem()}});
 $('#sPinB').onclick=()=>{const v=$('#sPin').value.trim(),h=$('#sHint');if(!pinOk(v)){h.className='hint err';h.textContent='비밀번호는 숫자 4자리로 넣어 주세요.';return}if(v===String(group.inPin||'')){h.className='hint err';h.textContent='입력용 비밀번호와 달라야 해요.';return}
   run(S.patchGroup(cur,{pin:v})).then(()=>{$('#sPin').value='';h.className='hint';h.textContent='비밀번호를 바꿨어요.'})};
 $('#sInPinB').onclick=()=>{const v=$('#sInPin').value.trim(),h=$('#sHint');h.className='hint err';if(!pinOk(v)){h.textContent='입력용 비밀번호는 숫자 4자리로 넣어 주세요.';return}if(v===String(group.pin)){h.textContent='총무 비밀번호와 달라야 해요.';return}
-  run(S.patchGroup(cur,{inPin:v})).then(()=>{fillSet();$('#sHint').className='hint';$('#sHint').textContent='공동 입력을 켰어요. 입력용 비밀번호를 회원에게 알려 주세요.'})};
+  run(S.patchGroup(cur,{inPin:v})).then(()=>{$('#sInPin').value='';$('#sInState').textContent='(설정됨 · 바꾸려면 새 번호 입력)';$('#sHint').className='hint';$('#sHint').textContent='공동 입력을 켰어요. 입력용 비밀번호를 회원에게 알려 주세요.'})};
 $('#sDel').onclick=e=>{const b=e.currentTarget;if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='한 번 더 누르면 지출까지 모두 삭제돼요';return}
   const id=cur,ids=Object.keys(exps);$('#pSet').hidden=true;goHome();run(S.delGroup(id,ids)).then(()=>toast('모임을 삭제했어요.'))};
 
